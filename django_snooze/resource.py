@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from collections import OrderedDict
+
+from django.shortcuts import get_object_or_404
+
 from django_snooze.utils import json_response
 from django_snooze.fields import field
 
@@ -24,8 +27,10 @@ class ModelResource(object):
         self.model_name = model._meta.model_name
         self.query_url_re = self.get_query_url_re()
         self.schema_re = self.get_schema_url_re()
+        self.pk_url_re = self.get_pk_url_re()
         self.query_reverse_name = self.get_query_reverse_name()
         self.schema_reverse_name = self.get_schema_reverse_name()
+        self.pk_reverse_name = self.get_pk_reverse_name()
         self.fields = self.get_fields()
         self.queryset = self.get_queryset()
 
@@ -40,6 +45,15 @@ class ModelResource(object):
         Method to get the query URL regular expression.
         """
         return self.get_url_re_base() + r'$'
+
+    def get_pk_url_re(self):
+        """Constructs the primary key regular expression.
+
+        :returns: A regular expression string.
+
+        """
+        # TODO: Detect different kinds of primary key than plain old integers.
+        return self.get_url_re_base() + r'(?P<pk>\d+)/$'
 
     def get_schema_url_re(self):
         """
@@ -58,6 +72,13 @@ class ModelResource(object):
         Method to get the name for the schema URL.
         """
         return '{}-{}-schema'.format(self.app, self.model_name)
+
+    def get_pk_reverse_name(self):
+        """Generates a reverse lookup name for the pk URL.
+        :returns: A reverse lookup string.
+
+        """
+        return '{}-{}-pk'.format(self.app, self.model_name)
 
     def get_fields(self):
         """
@@ -102,15 +123,36 @@ class ModelResource(object):
 
         # TODO: Make this faster?
         for obj in self.queryset:
-            obj_dict = {}
-            for obj_field in self.fields:
-                obj_dict[obj_field.name] = obj_field.to_json(
-                    getattr(obj, obj_field.name)
-                )
+            obj_dict = self.obj_to_json(obj)
             objects.append(obj_dict)
 
         content['objects'] = objects
         return content
+
+    def pk_view(self, request, pk):
+        """Shows the requested object.
+
+        :param request: The current request object.
+        :param pk: The primary key for the request object.
+        :returns: A HTTPResponse object.
+
+        """
+        obj = get_object_or_404(self.queryset, pk=pk)
+        return json_response(self.obj_to_json(obj))
+
+    def obj_to_json(self, obj):
+        """Convert an object to a json serialisable object.
+
+        :param obj: The object to serialise.
+        :returns: A serialisable object.
+
+        """
+        obj_dict = {}
+        for obj_field in self.fields:
+            obj_dict[obj_field.name] = obj_field.to_json(
+                getattr(obj, obj_field.name)
+            )
+        return obj_dict
 
     def schema_view(self, request):
         """

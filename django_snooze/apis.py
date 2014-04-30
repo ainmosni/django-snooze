@@ -50,6 +50,9 @@ class API(object):
                     url(resource.schema_re,
                         resource.schema_view,
                         name=resource.schema_reverse_name),
+                    url(resource.pk_url_re,
+                        resource.pk_view,
+                        name=resource.pk_reverse_name),
                 ]
 
         return urlpatterns
