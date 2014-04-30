@@ -47,7 +47,7 @@ class API(object):
                     url(resource.query_url_re,
                         resource.view,
                         name=resource.query_reverse_name),
-                    url(resource.schema_re,
+                    url(resource.schema_url_re,
                         resource.schema_view,
                         name=resource.schema_reverse_name),
                     url(resource.pk_url_re,

@@ -26,7 +26,7 @@ class ModelResource(object):
         self.app = model._meta.app_label
         self.model_name = model._meta.model_name
         self.query_url_re = self.get_query_url_re()
-        self.schema_re = self.get_schema_url_re()
+        self.schema_url_re = self.get_schema_url_re()
         self.pk_url_re = self.get_pk_url_re()
         self.query_reverse_name = self.get_query_reverse_name()
         self.schema_reverse_name = self.get_schema_reverse_name()
