@@ -68,7 +68,15 @@ class IntegerField(Field):
     """
     An integer field.
     """
-    pass
+
+    def to_json(self, field_value):
+        """Convert the value to an integer.
+
+        :param field_value: The field of the integer value.
+        :returns: An integer.
+
+        """
+        return int(field_value)
 
 
 class PositiveIntegerField(IntegerField):
@@ -118,12 +126,29 @@ class DecimalField(Field):
         self.decimal_places = field.decimal_places
         super(DecimalField, self).__init__(field)
 
+    def to_json(self, field_value):
+        """Convert the field value to a float.
+
+        :param field_value: The value of the DecimalField
+        :returns: A float.
+
+        """
+        return float(field_value)
+
 
 class FloatField(Field):
     """
     A floating point field.
     """
-    pass
+
+    def to_json(self, field_value):
+        """Convert field value to float.
+
+        :param field_value: The value of the FloatField.
+        :returns: A float.
+
+        """
+        return float(field_value)
 
 
 # Boolean fields
@@ -131,14 +156,30 @@ class BooleanField(Field):
     """
     A boolean field.
     """
-    pass
+
+    def to_json(self, field_value):
+        """Convert field value to bool.
+
+        :param field_value: The value of the BooleanField
+        :returns: A bool.
+
+        """
+        return bool(field_value)
 
 
 class NullBooleanField(BooleanField):
     """
     A boolean field with a NULL option.
     """
-    pass
+
+    def to_json(self, field_value):
+        """Convert field value to bool or None.
+
+        :param field_value: The value of the NullBooleanField
+        :returns: A bool if defined, else None.
+
+        """
+        return bool(field_value) if field_value else None
 
 
 # Character/Text fields
