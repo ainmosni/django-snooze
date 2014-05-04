@@ -65,7 +65,7 @@ class Field(object):
         :returns: Serialisable object representing field_value.
 
         """
-        return str(field_value)
+        return str(field_value) if field_value else None
 
 
 # Integer fields
@@ -81,7 +81,7 @@ class IntegerField(Field):
         :returns: An integer.
 
         """
-        return int(field_value)
+        return int(field_value) if field_value else None
 
 
 class PositiveIntegerField(IntegerField):
@@ -138,7 +138,7 @@ class DecimalField(Field):
         :returns: A float.
 
         """
-        return float(field_value)
+        return float(field_value) if field_value else None
 
 
 class FloatField(Field):
@@ -153,7 +153,7 @@ class FloatField(Field):
         :returns: A float.
 
         """
-        return float(field_value)
+        return float(field_value) if field_value else None
 
 
 # Boolean fields
