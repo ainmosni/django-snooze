@@ -42,6 +42,7 @@ class Field(object):
         """
         schema = OrderedDict()
         schema['name'] = self.name
+        schema['type'] = str(self.__class__.__name__)
         schema['null'] = self.null
         schema['blank'] = self.blank
         schema['editable'] = self.editable
