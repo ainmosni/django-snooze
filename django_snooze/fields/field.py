@@ -122,7 +122,7 @@ class DecimalField(Field):
         Arguments:
             - field (required): The field to process.
         """
-        self.max_digits = field.max_digitgs
+        self.max_digits = field.max_digits
         self.decimal_places = field.decimal_places
         super(DecimalField, self).__init__(field)
 
@@ -208,7 +208,7 @@ class SlugField(CharField):
     pass
 
 
-class CommaSeperatedIntegerField(CharField):
+class CommaSeparatedIntegerField(CharField):
     """
     A character field with comma seperated ints.
     """
@@ -260,6 +260,7 @@ class FilePathField(CharField):
         """
         self.match = field.match
         self.recursive = field.recursive
+        super(FilePathField, self).__init__(field)
 
 
 class ImageField(FileField):
