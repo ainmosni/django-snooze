@@ -49,7 +49,11 @@ class Field(object):
         schema['help_text'] = self.help_text
         schema['primary_key'] = self.primary_key
         schema['unique'] = self.unique
-        schema['default'] = str(self.default)
+        if not str(self.default).endswith('NOT_PROVIDED'):
+            try:
+                schema['default'] = self.to_json(self.default)
+            except (TypeError, AttributeError):
+                schema['default'] = str(self.default)
         return schema
 
     def to_json(self, field_value):
