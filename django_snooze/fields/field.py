@@ -294,6 +294,15 @@ class DateField(Field):
         self.auto_now_add = field.auto_now_add
         super(DateField, self).__init__(field)
 
+    def to_json(self, field_value):
+        """Converts the value to an ISO 8601 string.
+
+        :param field_value: A date object.
+        :returns: An ISO 8601 formatted string.
+
+        """
+        return field_value.isoformat() if field_value else None
+
 
 class DateTimeField(DateField):
     """
@@ -367,6 +376,16 @@ class ForeignKey(Field):
             'to_fields': self.to_fields
         })
         return schema
+
+    def to_json(self, field_value):
+        """Convert the field value (which is an object in and of itself) to
+        something we can use. @todo: Make this a lot smarter for API use..
+
+        :param field_value: A Django model object.
+        :returns: A integer of the pk of the object.
+
+        """
+        return int(field_value.pk) if field_value else None
 
 
 class ManyToManyField(ForeignKey):
