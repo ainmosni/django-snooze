@@ -217,16 +217,19 @@ class ModelResource(object):
             and 'application/json' in request.META['CONTENT_TYPE']
         ):
             data = json.loads(request.body)
-            form = self.form(initial=data)
+            form = self.form(data=data)
             if form.is_valid():
                 form.save()
                 response = {'Status': 'success'}
+                status_code = 201
             else:
                 response = form.errors
+                status_code = 400
         else:
             response = {'Status': 'Bad request'}
+            status_code = 400
 
-        return json_response(response)
+        return json_response(response, status_code=status_code)
 
     def __unicode__(self):
         return '{}-{}'.format(self.app, self.model_name)
