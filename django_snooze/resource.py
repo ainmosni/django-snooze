@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import json
 from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
+from django.forms.models import modelform_factory
+from django.views.decorators.csrf import csrf_exempt
 
 from django_snooze.utils import json_response
 from django_snooze.fields import field
@@ -28,11 +31,15 @@ class ModelResource(object):
         self.query_url_re = self.get_query_url_re()
         self.schema_url_re = self.get_schema_url_re()
         self.pk_url_re = self.get_pk_url_re()
+        self.new_url_re = self.get_new_url_re()
         self.query_reverse_name = self.get_query_reverse_name()
         self.schema_reverse_name = self.get_schema_reverse_name()
         self.pk_reverse_name = self.get_pk_reverse_name()
+        self.new_reverse_name = self.get_new_reverse_name()
         self.fields = self.get_fields()
+        self.fields_dict = self.get_fields_dict()
         self.queryset = self.get_queryset()
+        self.form = self.get_form()
 
     def get_url_re_base(self):
         """
@@ -61,6 +68,14 @@ class ModelResource(object):
         """
         return self.get_url_re_base() + r'schema/$'
 
+    def get_new_url_re(self):
+        """Constructs the regular expression for the 'new' URL.
+
+        :returns: A regular expression string.
+
+        """
+        return self.get_url_re_base() + r'new/$'
+
     def get_query_reverse_name(self):
         """
         Method to get the name for the query URL.
@@ -75,10 +90,19 @@ class ModelResource(object):
 
     def get_pk_reverse_name(self):
         """Generates a reverse lookup name for the pk URL.
+
         :returns: A reverse lookup string.
 
         """
         return '{}-{}-pk'.format(self.app, self.model_name)
+
+    def get_new_reverse_name(self):
+        """Generates a reverse lookup name for the new URL.
+
+        :returns: A reverse lookup string.
+
+        """
+        return '{}-{}-new'.format(self.app, self.model_name)
 
     def get_fields(self):
         """
@@ -89,6 +113,14 @@ class ModelResource(object):
 
         return fields
 
+    def get_fields_dict(self):
+        """Adds all fields to a dictionary, keyed by name.
+
+        :returns: A dictionary of fields.
+
+        """
+        return {x.name: x for x in self.fields}
+
     def get_queryset(self):
         """Gets the queryset of the model.
 
@@ -97,6 +129,15 @@ class ModelResource(object):
         """
         # TODO: Change this to detect it in the meta class of the model.
         return self.model.objects.all()
+
+    def get_form(self):
+        """Gets a modelform of the current model, to be used for creation and
+        editing.
+
+        :returns: A ModelForm
+
+        """
+        return modelform_factory(self.model)
 
     def view(self, request):
         """
@@ -162,6 +203,30 @@ class ModelResource(object):
         for f in self.fields:
             schema[f.name] = f.schema_info()
         return json_response(schema)
+
+    @csrf_exempt
+    def new_view(self, request):
+        """Add a new object, we do this by accepting a JSON post.
+
+        :param request: A Django request object.
+        :returns: An HttpResponse object.
+
+        """
+        if (
+            request.method == 'POST'
+            and 'application/json' in request.META['CONTENT_TYPE']
+        ):
+            data = json.loads(request.body)
+            form = self.form(initial=data)
+            if form.is_valid():
+                form.save()
+                response = {'Status': 'success'}
+            else:
+                response = form.errors
+        else:
+            response = {'Status': 'Bad request'}
+
+        return json_response(response)
 
     def __unicode__(self):
         return '{}-{}'.format(self.app, self.model_name)

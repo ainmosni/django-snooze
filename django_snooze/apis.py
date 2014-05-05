@@ -53,6 +53,9 @@ class API(object):
                     url(resource.pk_url_re,
                         resource.pk_view,
                         name=resource.pk_reverse_name),
+                    url(resource.new_url_re,
+                        resource.new_view,
+                        name=resource.new_reverse_name),
                 ]
 
         return urlpatterns
