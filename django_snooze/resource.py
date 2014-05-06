@@ -80,13 +80,13 @@ class ModelResource(object):
         """
         Method to get the name for the query URL.
         """
-        return '{}-{}'.format(self.app, self.model_name)
+        return 'snooze_{}_{}_query'.format(self.app, self.model_name)
 
     def get_schema_reverse_name(self):
         """
         Method to get the name for the schema URL.
         """
-        return '{}-{}-schema'.format(self.app, self.model_name)
+        return 'snooze_{}_{}_schema'.format(self.app, self.model_name)
 
     def get_pk_reverse_name(self):
         """Generates a reverse lookup name for the pk URL.
@@ -94,7 +94,7 @@ class ModelResource(object):
         :returns: A reverse lookup string.
 
         """
-        return '{}-{}-pk'.format(self.app, self.model_name)
+        return 'snooze_{}_{}_pk'.format(self.app, self.model_name)
 
     def get_new_reverse_name(self):
         """Generates a reverse lookup name for the new URL.
@@ -102,7 +102,7 @@ class ModelResource(object):
         :returns: A reverse lookup string.
 
         """
-        return '{}-{}-new'.format(self.app, self.model_name)
+        return 'snooze_{}_{}_new'.format(self.app, self.model_name)
 
     def get_fields(self):
         """

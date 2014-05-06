@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.db.models import get_models
+from django.core.urlresolvers import reverse
 
 from django_snooze.utils import json_response
 from django_snooze.resource import ModelResource
@@ -12,7 +13,7 @@ class API(object):
     routing.
     """
 
-    def __init__(self, name='snooze', app_name='snooze'):
+    def __init__(self, name='django_snooze', app_name='django_snooze'):
         self._resources = {}
         self.name = name
         self.app_name = app_name
@@ -75,7 +76,18 @@ class API(object):
             for resource in resources:
                 model_info = {
                     'name': resource.model_name,
-                    'path': 'TODO',
+                    'query_path': reverse('{}:{}'.format(
+                        self.app_name,
+                        resource.query_reverse_name
+                    )),
+                    'schema_path': reverse('{}:{}'.format(
+                        self.app_name,
+                        resource.schema_reverse_name
+                    )),
+                    'new_path': reverse('{}:{}'.format(
+                        self.app_name,
+                        resource.new_reverse_name
+                    )),
                 }
                 resource_str[app].append(model_info)
 
