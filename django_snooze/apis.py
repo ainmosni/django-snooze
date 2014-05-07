@@ -28,7 +28,7 @@ class API(object):
                 continue
             app = model._meta.app_label
             resources = self._resources.get(app, [])
-            resources.append(ModelResource(model))
+            resources.append(ModelResource(model, self))
             self._resources[app] = resources
 
     def get_urls(self):
@@ -46,7 +46,7 @@ class API(object):
             for resource in resources:
                 urlpatterns += [
                     url(resource.query_url_re,
-                        resource.view,
+                        resource.query_view,
                         name=resource.query_reverse_name),
                     url(resource.schema_url_re,
                         resource.schema_view,

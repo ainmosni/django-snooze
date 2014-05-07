@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from django_snooze.utils import json_response
 from django_snooze.fields import field
+from django_snooze.views import QueryView
 
 
 class ModelResource(object):
@@ -17,35 +18,51 @@ class ModelResource(object):
     object.
     """
 
-    def __init__(self, model):
-        """
-        This inspects all the model's meta information and process it to
+    def __init__(self, model, api):
+        """This inspects all the model's meta information and process it to
         extract all the information we need.
 
-        Arguments:
-            - model (required): The model to inspect.
+        :param model: The model to inspect.
+        :param api: The API object that spawned this resource.
+        :returns: None
+
         """
         self.model = model
         self.app = model._meta.app_label
         self.model_name = model._meta.model_name
-        self.query_url_re = self.get_query_url_re()
-        self.schema_url_re = self.get_schema_url_re()
-        self.pk_url_re = self.get_pk_url_re()
-        self.new_url_re = self.get_new_url_re()
-        self.query_reverse_name = self.get_query_reverse_name()
-        self.schema_reverse_name = self.get_schema_reverse_name()
-        self.pk_reverse_name = self.get_pk_reverse_name()
-        self.new_reverse_name = self.get_new_reverse_name()
-        self.fields = self.get_fields()
-        self.fields_dict = self.get_fields_dict()
+        self.api = api
+
         self.queryset = self.get_queryset()
         self.form = self.get_form()
+
+        self.fields = self.get_fields()
+        self.fields_dict = self.get_fields_dict()
+
+        self.query_view = self.get_query_view()
+        self.query_url_re = self.get_query_url_re()
+        self.query_reverse_name = self.get_query_reverse_name()
+
+        self.schema_url_re = self.get_schema_url_re()
+        self.schema_reverse_name = self.get_schema_reverse_name()
+
+        self.pk_url_re = self.get_pk_url_re()
+        self.pk_reverse_name = self.get_pk_reverse_name()
+
+        self.new_url_re = self.get_new_url_re()
+        self.new_reverse_name = self.get_new_reverse_name()
 
     def get_url_re_base(self):
         """
         Method to get the URL base regular expression.
         """
         return r'^{}/{}/'.format(self.app, self.model_name)
+
+    def get_query_view(self):
+        """Constructs the QueryView object for this resource.
+        :returns: The initialised QueryView object for this resource.
+
+        """
+        return QueryView.as_view(resource=self)
 
     def get_query_url_re(self):
         """
@@ -138,37 +155,6 @@ class ModelResource(object):
 
         """
         return modelform_factory(self.model)
-
-    def view(self, request):
-        """
-        View handler.
-        """
-        # Set self.request so that we don't have to pass it around all the time
-        self.request = request
-        if request.method == 'GET':
-            content = self.get()
-        elif request.method == 'POST':
-            content = self.post()
-        else:
-            return json_response({'error': 'Bad request'}, status_code=400)
-        return json_response(content)
-
-    def get(self):
-        """Handle a GET request.
-
-        :returns: A json serialisable object.
-
-        """
-        content = {}
-        objects = []
-
-        # TODO: Make this faster?
-        for obj in self.queryset:
-            obj_dict = self.obj_to_json(obj)
-            objects.append(obj_dict)
-
-        content['objects'] = objects
-        return content
 
     def pk_view(self, request, pk):
         """Shows the requested object.
