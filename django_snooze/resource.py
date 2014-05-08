@@ -57,69 +57,23 @@ class ModelResource(object):
         """
         return r'^{}/{}/'.format(self.app, self.model_name)
 
-    def get_query_view(self):
-        """Constructs the QueryView object for this resource.
-        :returns: The initialised QueryView object for this resource.
+    def get_queryset(self):
+        """Gets the queryset of the model.
+
+        :returns: The queryset
 
         """
-        return QueryView.as_view(resource=self)
+        # TODO: Change this to detect it in the meta class of the model.
+        return self.model.objects.all()
 
-    def get_query_url_re(self):
-        """
-        Method to get the query URL regular expression.
-        """
-        return self.get_url_re_base() + r'$'
+    def get_form(self):
+        """Gets a modelform of the current model, to be used for creation and
+        editing.
 
-    def get_pk_url_re(self):
-        """Constructs the primary key regular expression.
-
-        :returns: A regular expression string.
+        :returns: A ModelForm
 
         """
-        # TODO: Detect different kinds of primary key than plain old integers.
-        return self.get_url_re_base() + r'(?P<pk>\d+)/$'
-
-    def get_schema_url_re(self):
-        """
-        Method to get the schema URL regular expression.
-        """
-        return self.get_url_re_base() + r'schema/$'
-
-    def get_new_url_re(self):
-        """Constructs the regular expression for the 'new' URL.
-
-        :returns: A regular expression string.
-
-        """
-        return self.get_url_re_base() + r'new/$'
-
-    def get_query_reverse_name(self):
-        """
-        Method to get the name for the query URL.
-        """
-        return 'snooze_{}_{}_query'.format(self.app, self.model_name)
-
-    def get_schema_reverse_name(self):
-        """
-        Method to get the name for the schema URL.
-        """
-        return 'snooze_{}_{}_schema'.format(self.app, self.model_name)
-
-    def get_pk_reverse_name(self):
-        """Generates a reverse lookup name for the pk URL.
-
-        :returns: A reverse lookup string.
-
-        """
-        return 'snooze_{}_{}_pk'.format(self.app, self.model_name)
-
-    def get_new_reverse_name(self):
-        """Generates a reverse lookup name for the new URL.
-
-        :returns: A reverse lookup string.
-
-        """
-        return 'snooze_{}_{}_new'.format(self.app, self.model_name)
+        return modelform_factory(self.model)
 
     def get_fields(self):
         """
@@ -138,23 +92,69 @@ class ModelResource(object):
         """
         return {x.name: x for x in self.fields}
 
-    def get_queryset(self):
-        """Gets the queryset of the model.
-
-        :returns: The queryset
-
-        """
-        # TODO: Change this to detect it in the meta class of the model.
-        return self.model.objects.all()
-
-    def get_form(self):
-        """Gets a modelform of the current model, to be used for creation and
-        editing.
-
-        :returns: A ModelForm
+    def get_query_view(self):
+        """Constructs the QueryView object for this resource.
+        :returns: The initialised QueryView object for this resource.
 
         """
-        return modelform_factory(self.model)
+        return QueryView.as_view(resource=self)
+
+    def get_query_url_re(self):
+        """
+        Method to get the query URL regular expression.
+        """
+        return self.get_url_re_base() + r'$'
+
+    def get_query_reverse_name(self):
+        """
+        Method to get the name for the query URL.
+        """
+        return 'snooze_{}_{}_query'.format(self.app, self.model_name)
+
+    def get_schema_url_re(self):
+        """
+        Method to get the schema URL regular expression.
+        """
+        return self.get_url_re_base() + r'schema/$'
+
+    def get_schema_reverse_name(self):
+        """
+        Method to get the name for the schema URL.
+        """
+        return 'snooze_{}_{}_schema'.format(self.app, self.model_name)
+
+    def get_pk_url_re(self):
+        """Constructs the primary key regular expression.
+
+        :returns: A regular expression string.
+
+        """
+        # TODO: Detect different kinds of primary key than plain old integers.
+        return self.get_url_re_base() + r'(?P<pk>\d+)/$'
+
+    def get_pk_reverse_name(self):
+        """Generates a reverse lookup name for the pk URL.
+
+        :returns: A reverse lookup string.
+
+        """
+        return 'snooze_{}_{}_pk'.format(self.app, self.model_name)
+
+    def get_new_url_re(self):
+        """Constructs the regular expression for the 'new' URL.
+
+        :returns: A regular expression string.
+
+        """
+        return self.get_url_re_base() + r'new/$'
+
+    def get_new_reverse_name(self):
+        """Generates a reverse lookup name for the new URL.
+
+        :returns: A reverse lookup string.
+
+        """
+        return 'snooze_{}_{}_new'.format(self.app, self.model_name)
 
     def pk_view(self, request, pk):
         """Shows the requested object.
