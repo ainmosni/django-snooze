@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
 from django.forms.models import modelform_factory
@@ -9,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from django_snooze.utils import json_response
 from django_snooze.fields import field
-from django_snooze.views import QueryView
+from django_snooze.views import QueryView, SchemaView
 
 
 class ModelResource(object):
@@ -42,6 +41,7 @@ class ModelResource(object):
         self.query_url_re = self.get_query_url_re()
         self.query_reverse_name = self.get_query_reverse_name()
 
+        self.schema_view = self.get_schema_view()
         self.schema_url_re = self.get_schema_url_re()
         self.schema_reverse_name = self.get_schema_reverse_name()
 
@@ -110,6 +110,13 @@ class ModelResource(object):
         Method to get the name for the query URL.
         """
         return 'snooze_{}_{}_query'.format(self.app, self.model_name)
+
+    def get_schema_view(self):
+        """Constructs the SchemaView object for this resource.
+        :returns: The initialised SchemaView object for this resource.
+
+        """
+        return SchemaView.as_view(resource=self)
 
     def get_schema_url_re(self):
         """
@@ -180,15 +187,6 @@ class ModelResource(object):
                 getattr(obj, obj_field.name)
             )
         return obj_dict
-
-    def schema_view(self, request):
-        """
-        Schema handler.
-        """
-        schema = OrderedDict()
-        for f in self.fields:
-            schema[f.name] = f.schema_info()
-        return json_response(schema)
 
     @csrf_exempt
     def new_view(self, request):

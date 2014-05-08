@@ -2,6 +2,7 @@
 This will contain all the generic CBVs to handle all requests.
 """
 import json
+from collections import OrderedDict
 
 from django.views.generic import View
 from django.http import HttpResponse
@@ -69,3 +70,22 @@ class QueryView(RESTView):
 
         content['objects'] = objects
         return (content, 200)
+
+
+class SchemaView(RESTView):
+    """
+    This view will handle schema requests for self.resource, it only supports
+    GET requests.
+    """
+
+    def get_content_data(self, **kwargs):
+        """Handles getting the schema dictionary for the current resource.
+
+        :param **kwargs: Not used in this request.
+        :returns: A tuple of the content dictionary and the status code.
+
+        """
+        schema = OrderedDict()
+        for f in self.resource.fields:
+            schema[f.name] = f.schema_info()
+        return (schema, 200)
