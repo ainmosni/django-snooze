@@ -2,13 +2,12 @@
 
 import json
 
-from django.shortcuts import get_object_or_404
 from django.forms.models import modelform_factory
 from django.views.decorators.csrf import csrf_exempt
 
 from django_snooze.utils import json_response
 from django_snooze.fields import field
-from django_snooze.views import QueryView, SchemaView
+from django_snooze.views import QueryView, SchemaView, ObjectView
 
 
 class ModelResource(object):
@@ -45,6 +44,7 @@ class ModelResource(object):
         self.schema_url_re = self.get_schema_url_re()
         self.schema_reverse_name = self.get_schema_reverse_name()
 
+        self.pk_view = self.get_pk_view()
         self.pk_url_re = self.get_pk_url_re()
         self.pk_reverse_name = self.get_pk_reverse_name()
 
@@ -130,6 +130,13 @@ class ModelResource(object):
         """
         return 'snooze_{}_{}_schema'.format(self.app, self.model_name)
 
+    def get_pk_view(self):
+        """Constructs the ObjectView for this resource.
+        :returns: The initialised ObjectView object for this resource.
+
+        """
+        return ObjectView.as_view(resource=self)
+
     def get_pk_url_re(self):
         """Constructs the primary key regular expression.
 
@@ -137,7 +144,7 @@ class ModelResource(object):
 
         """
         # TODO: Detect different kinds of primary key than plain old integers.
-        return self.get_url_re_base() + r'(?P<pk>\d+)/$'
+        return self.get_url_re_base() + r'(?P<pk_url_arg>\d+)/$'
 
     def get_pk_reverse_name(self):
         """Generates a reverse lookup name for the pk URL.
@@ -162,17 +169,6 @@ class ModelResource(object):
 
         """
         return 'snooze_{}_{}_new'.format(self.app, self.model_name)
-
-    def pk_view(self, request, pk):
-        """Shows the requested object.
-
-        :param request: The current request object.
-        :param pk: The primary key for the request object.
-        :returns: A HTTPResponse object.
-
-        """
-        obj = get_object_or_404(self.queryset, pk=pk)
-        return json_response(self.obj_to_json(obj))
 
     def obj_to_json(self, obj):
         """Convert an object to a json serialisable object.
@@ -216,4 +212,4 @@ class ModelResource(object):
         return json_response(response, status_code=status_code)
 
     def __unicode__(self):
-        return '{}-{}'.format(self.app, self.model_name)
+        return 'snooze resource for {}-{}'.format(self.app, self.model_name)

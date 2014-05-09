@@ -4,6 +4,7 @@ This will contain all the generic CBVs to handle all requests.
 import json
 from collections import OrderedDict
 
+from django.shortcuts import get_object_or_404
 from django.views.generic import View
 from django.http import HttpResponse
 
@@ -89,3 +90,20 @@ class SchemaView(RESTView):
         for f in self.resource.fields:
             schema[f.name] = f.schema_info()
         return (schema, 200)
+
+
+class ObjectView(RESTView):
+    """
+    Shows the requested object.
+    """
+
+    def get_content_data(self, pk_url_arg,  **kwargs):
+        """Gets a single object and returns a serialisable dictionary.
+
+        :param pk_url_arg: The primary key of the requested object.
+        :param **kwargs: Not used in this request.
+        :returns: A tuple with the object dictionary and the status code.
+
+        """
+        obj = get_object_or_404(self.resource.queryset, pk=pk_url_arg)
+        return (self.resource.obj_to_json(obj), 200)
