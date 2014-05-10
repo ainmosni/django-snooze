@@ -24,24 +24,24 @@ clean-pyc:
 	find . -name '*~' -exec rm -f {} +
 
 lint:
-	flake8 django-snooze tests
+	flake8 django_snooze tests
 
 test:
-	python runtests.py test
+	python runtests.py tests
 
 test-all:
 	tox
 
 coverage:
-	coverage run --source django-snooze setup.py test
+	coverage run --source django_snooze setup.py test
 	coverage report -m
 	coverage html
 	open htmlcov/index.html
 
 docs:
-	rm -f docs/django-snooze.rst
+	rm -f docs/django_snooze.rst
 	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ django-snooze
+	sphinx-apidoc -o docs/ django_snooze
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
 	open docs/_build/html/index.html

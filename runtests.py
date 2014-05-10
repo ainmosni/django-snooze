@@ -11,25 +11,31 @@ try:
                 "ENGINE": "django.db.backends.sqlite3",
             }
         },
-        ROOT_URLCONF="django_snooze.urls",
+        ROOT_URLCONF="tests.urls",
         INSTALLED_APPS=[
             "django.contrib.auth",
             "django.contrib.contenttypes",
             "django.contrib.sites",
+            "tests",
             "django_snooze",
         ],
         SITE_ID=1,
         NOSE_ARGS=['-s'],
     )
 
+    from django.test.utils import setup_test_environment
     from django_nose import NoseTestSuiteRunner
 except ImportError:
-    raise ImportError("To fix this error, run: pip install -r requirements-test.txt")
+    raise ImportError(
+        "To fix this error, run: pip install -r requirements-test.txt")
 
 
 def run_tests(*test_args):
     if not test_args:
         test_args = ['tests']
+
+    # Setup django test environment.
+    setup_test_environment()
 
     # Run tests
     test_runner = NoseTestSuiteRunner(verbosity=1)
