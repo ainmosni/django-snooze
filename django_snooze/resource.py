@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import json
-
 from django.forms.models import modelform_factory
-from django.views.decorators.csrf import csrf_exempt
 
-from django_snooze.utils import json_response
 from django_snooze.fields import field
-from django_snooze.views import QueryView, SchemaView, ObjectView
+from django_snooze.views import (QueryView,
+                                 SchemaView,
+                                 ObjectView,
+                                 NewObjectView)
 
 
 class ModelResource(object):
@@ -48,6 +47,7 @@ class ModelResource(object):
         self.pk_url_re = self.get_pk_url_re()
         self.pk_reverse_name = self.get_pk_reverse_name()
 
+        self.new_view = self.get_new_view()
         self.new_url_re = self.get_new_url_re()
         self.new_reverse_name = self.get_new_reverse_name()
 
@@ -132,6 +132,7 @@ class ModelResource(object):
 
     def get_pk_view(self):
         """Constructs the ObjectView for this resource.
+
         :returns: The initialised ObjectView object for this resource.
 
         """
@@ -153,6 +154,14 @@ class ModelResource(object):
 
         """
         return 'snooze_{}_{}_pk'.format(self.app, self.model_name)
+
+    def get_new_view(self):
+        """Constructs the NewObjectView.
+
+        :returns: The initialised NewObjectView.
+
+        """
+        return NewObjectView.as_view(resource=self)
 
     def get_new_url_re(self):
         """Constructs the regular expression for the 'new' URL.
@@ -183,33 +192,6 @@ class ModelResource(object):
                 getattr(obj, obj_field.name)
             )
         return obj_dict
-
-    @csrf_exempt
-    def new_view(self, request):
-        """Add a new object, we do this by accepting a JSON post.
-
-        :param request: A Django request object.
-        :returns: An HttpResponse object.
-
-        """
-        if (
-            request.method == 'POST'
-            and 'application/json' in request.META['CONTENT_TYPE']
-        ):
-            data = json.loads(request.body)
-            form = self.form(data=data)
-            if form.is_valid():
-                form.save()
-                response = {'Status': 'success'}
-                status_code = 201
-            else:
-                response = form.errors
-                status_code = 400
-        else:
-            response = {'Status': 'Bad request'}
-            status_code = 400
-
-        return json_response(response, status_code=status_code)
 
     def __unicode__(self):
         return 'snooze resource for {}-{}'.format(self.app, self.model_name)

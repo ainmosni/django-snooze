@@ -7,6 +7,8 @@ from collections import OrderedDict
 from django.shortcuts import get_object_or_404
 from django.views.generic import View
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 class RESTView(View):
@@ -29,6 +31,7 @@ class RESTView(View):
         """
         response = HttpResponse()
         response.write(json.dumps(content))
+        response['Content-Type'] = 'application/json; charset=utf-8'
         response.status_code = status_code
         for k, v in kwargs.items():
             response[k] = v
@@ -47,12 +50,25 @@ class RESTView(View):
         content, status_code = self.get_content_data(**kwargs)
         return self.render_json_response(content, status_code=status_code)
 
+    @method_decorator(csrf_exempt)
+    def dispatch(self, *args, **kwargs):
+        """Overriden dispatch to disable CSRF on all snooze views.
+
+        :param *args: Arguments list
+        :param **kwargs: Keyword argument dict.
+        :returns: The response.
+
+        """
+        return super(RESTView, self).dispatch(*args, **kwargs)
+
 
 class QueryView(RESTView):
     """
     This view will handle queries for self.resource, it only supports GET
     requests at the moment with POST-queries planned in the near future.
     """
+
+    http_method_names = ['get', 'head']
 
     def get_content_data(self, **kwargs):
         """Handles getting the content for the current query.
@@ -79,6 +95,8 @@ class SchemaView(RESTView):
     GET requests.
     """
 
+    http_method_names = ['get', 'head']
+
     def get_content_data(self, **kwargs):
         """Handles getting the schema dictionary for the current resource.
 
@@ -97,6 +115,8 @@ class ObjectView(RESTView):
     Shows the requested object.
     """
 
+    http_method_names = ['get', 'head']
+
     def get_content_data(self, pk_url_arg,  **kwargs):
         """Gets a single object and returns a serialisable dictionary.
 
@@ -107,3 +127,40 @@ class ObjectView(RESTView):
         """
         obj = get_object_or_404(self.resource.queryset, pk=pk_url_arg)
         return (self.resource.obj_to_json(obj), 200)
+
+
+class NewObjectView(RESTView):
+    """
+    Creates a new object via a modelform.
+    """
+
+    http_method_names = ['post']
+
+    def post(self, request, *args, **kwargs):
+        """Creates an object, using the json in the request body as data of the
+        modelform in the API object
+
+        :param request: The django request object.
+        :param *args: Optional arguments.
+        :param **kwargs: Optional keyword arguments.
+        :returns: An HttpResponse with the status of the operation.
+
+        """
+        # Assume a bad request by default.
+        response = {'Status': 'Wrong Content-Type.'}
+        status_code = 400
+
+        if self.request.META.get(
+            'CONTENT_TYPE', ''
+        ).startswith('application/json'):
+            data = json.loads(request.body)
+            form = self.resource.form(data=data)
+            if form.is_valid():
+                form.save()
+                response = {'Status': 'success'}
+                status_code = 201
+            else:
+                response = {'Status': 'failed',
+                            'errors': form.errors}
+
+        return self.render_json_response(response, status_code=status_code)
