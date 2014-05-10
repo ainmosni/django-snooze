@@ -2,7 +2,7 @@
 
 from django.forms.models import modelform_factory
 
-from django_snooze.fields import field
+from django_snooze import fields
 from django_snooze.views import (QueryView,
                                  SchemaView,
                                  ObjectView,
@@ -79,10 +79,10 @@ class ModelResource(object):
         """
         Gets all the fields of the model.
         """
-        fields = [getattr(field, x.__class__.__name__)(x)
-                  for x in self.model._meta.fields]
+        model_fields = [getattr(fields, x.__class__.__name__)(x)
+                        for x in self.model._meta.fields]
 
-        return fields
+        return model_fields
 
     def get_fields_dict(self):
         """Adds all fields to a dictionary, keyed by name.
