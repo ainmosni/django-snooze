@@ -33,7 +33,7 @@ test-all:
 	tox
 
 coverage:
-	coverage run --source django_snooze setup.py test
+	coverage run --source django_snooze runtests.py tests
 	coverage report -m
 	coverage html
 	open htmlcov/index.html
