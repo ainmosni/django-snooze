@@ -9,6 +9,7 @@ from django.views.generic import View
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.core.urlresolvers import reverse
 
 
 class RESTView(View):
@@ -17,8 +18,6 @@ class RESTView(View):
 
     It keeps the api and resource variable to get access to their variables.
     """
-
-    resource = None
 
     def render_json_response(self, content, status_code=200, **kwargs):
         """Serialises content to the content to a response object.
@@ -46,7 +45,7 @@ class RESTView(View):
         :returns: The response.
 
         """
-        # TODO: Use exceptions for cleaner error-code handling?
+        # XXX: Use exceptions for cleaner error-code handling?
         content, status_code = self.get_content_data(**kwargs)
         return self.render_json_response(content, status_code=status_code)
 
@@ -62,7 +61,55 @@ class RESTView(View):
         return super(RESTView, self).dispatch(*args, **kwargs)
 
 
-class QueryView(RESTView):
+class IndexView(RESTView):
+    """
+    A simple CBV for showing the index of all resources.
+    """
+
+    api = None
+
+    def get_content_data(self, **kwargs):
+        """This will iterate over all apps and models discovered by the API
+        and return an index data structure.
+
+        :param **kwargs: Not used, kept because it gets passed to us.
+        :returns: A tuple containing the index structure and the status code.
+
+        """
+        index_struct = {}
+        for app, resources in self.api._resources.items():
+            app_dict = index_struct.get(app, {})
+            for resource in resources:
+                app_dict[resource.model_name] = {
+                    'query_path': reverse('{}:{}'.format(
+                        self.api.app_name,
+                        resource.query_reverse_name
+                    )),
+                    'schema_path': reverse('{}:{}'.format(
+                        self.api.app_name,
+                        resource.schema_reverse_name
+                    )),
+                    'new_path': reverse('{}:{}'.format(
+                        self.api.app_name,
+                        resource.new_reverse_name
+                    ))
+                }
+            index_struct[app] = app_dict
+
+        return (index_struct, 200)
+
+
+class ResourceView(RESTView):
+    """
+    Parent class for all resource views.
+
+    This will only contain the resource class variable for now but it's
+    seperated out for possible extension reasons.
+    """
+    resource = None
+
+
+class QueryView(ResourceView):
     """
     This view will handle queries for self.resource, it only supports GET
     requests at the moment with POST-queries planned in the near future.
@@ -89,7 +136,7 @@ class QueryView(RESTView):
         return (content, 200)
 
 
-class SchemaView(RESTView):
+class SchemaView(ResourceView):
     """
     This view will handle schema requests for self.resource, it only supports
     GET requests.
@@ -110,7 +157,7 @@ class SchemaView(RESTView):
         return (schema, 200)
 
 
-class ObjectView(RESTView):
+class ObjectView(ResourceView):
     """
     Shows the requested object.
     """
@@ -129,7 +176,7 @@ class ObjectView(RESTView):
         return (self.resource.obj_to_json(obj), 200)
 
 
-class NewObjectView(RESTView):
+class NewObjectView(ResourceView):
     """
     Creates a new object via a modelform.
     """

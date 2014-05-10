@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from django.db.models import get_models
-from django.core.urlresolvers import reverse
 
-from django_snooze.utils import json_response
 from django_snooze.resource import ModelResource
+from django_snooze.views import IndexView
 
 
 class API(object):
@@ -17,6 +16,7 @@ class API(object):
         self._resources = {}
         self.name = name
         self.app_name = app_name
+        self.index_view = self.get_index_view()
 
     def discover_models(self):
         """
@@ -31,6 +31,14 @@ class API(object):
             resources.append(ModelResource(model, self))
             self._resources[app] = resources
 
+    def get_index_view(self):
+        """Constucts an initialised IndexView.
+
+        :returns: An initialised IndexView
+
+        """
+        return IndexView.as_view(api=self)
+
     def get_urls(self):
         """
         Constructs the API urls based on what models are registered.
@@ -39,7 +47,7 @@ class API(object):
 
         # Base URL patterns
         urlpatterns = [
-            url(r'^$', self.index, name='index'),
+            url(r'^$', self.index_view, name='index'),
         ]
 
         for app, resources in self._resources.items():
@@ -64,34 +72,6 @@ class API(object):
     @property
     def urls(self):
         return (self.get_urls(), self.app_name, self.name)
-
-    def index(self, request):
-        """
-        The root view of our API, this will return a JSON mapping of all
-        available resources.
-        """
-        resource_str = {}
-        for app, resources in self._resources.items():
-            resource_str[app] = []
-            for resource in resources:
-                model_info = {
-                    'name': resource.model_name,
-                    'query_path': reverse('{}:{}'.format(
-                        self.app_name,
-                        resource.query_reverse_name
-                    )),
-                    'schema_path': reverse('{}:{}'.format(
-                        self.app_name,
-                        resource.schema_reverse_name
-                    )),
-                    'new_path': reverse('{}:{}'.format(
-                        self.app_name,
-                        resource.new_reverse_name
-                    )),
-                }
-                resource_str[app].append(model_info)
-
-        return json_response(resource_str)
 
 # This is a default API object that we will use throughout django_snooze
 api = API()
