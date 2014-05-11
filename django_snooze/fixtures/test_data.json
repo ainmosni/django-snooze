@@ -1,0 +1,26 @@
+[
+    {
+        "model": "tests.simple",
+        "pk": 1,
+        "fields": {
+            "one": 111,
+            "two": "Some string"
+        }
+    },
+    {
+        "model": "tests.simple",
+        "pk": 2,
+        "fields": {
+            "one": 222,
+            "two": "Some other string"
+        }
+    },
+    {
+        "model": "tests.simple",
+        "pk": 3,
+        "fields": {
+            "one": 333,
+            "two": "Yet another string"
+        }
+    }
+]
