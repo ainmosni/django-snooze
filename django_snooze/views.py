@@ -203,8 +203,13 @@ class NewObjectView(ResourceView):
             data = json.loads(request.body)
             form = self.resource.form(data=data)
             if form.is_valid():
-                form.save()
-                response = {'Status': 'success'}
+                obj = form.save()
+                response = {'Status': 'success',
+                            'Location': reverse('{}:{}'.format(
+                                self.resource.api.name,
+                                self.resource.pk_reverse_name
+                            ), args=[obj.pk]),
+                            'pk': obj.pk}
                 status_code = 201
             else:
                 response = {'Status': 'failed',
