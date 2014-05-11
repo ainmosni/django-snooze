@@ -20,3 +20,4 @@ notifications:
     irc:
         channels:
             - "chat.freenode.net#django-snooze"
+    email: false
