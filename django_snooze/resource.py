@@ -196,4 +196,4 @@ class ModelResource(object):
         return obj_dict
 
     def __unicode__(self):
-        return 'snooze resource for {}-{}'.format(self.app, self.model_name)
+        return u'snooze resource for {}-{}'.format(self.app, self.model_name)
