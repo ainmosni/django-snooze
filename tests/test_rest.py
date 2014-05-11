@@ -5,6 +5,7 @@ import json
 from django.test import TestCase
 from django.test.client import Client
 from django.core import management
+from django.utils.encoding import smart_text
 
 
 class RESTTestCase(TestCase):
@@ -23,7 +24,7 @@ class RESTTestCase(TestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual(u'application/json; charset=utf-8',
                          r['Content-Type'])
-        index = json.loads(r.content)
+        index = json.loads(smart_text(r.content))
         self.assertIn(u'tests', index)
         self.assertIn(u'simple', index['tests'])
         required_paths = set(['new_path', 'schema_path', 'query_path'])
@@ -37,7 +38,7 @@ class RESTTestCase(TestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual(u'application/json; charset=utf-8',
                          r['Content-Type'])
-        schema = json.loads(r.content)
+        schema = json.loads(smart_text(r.content))
         fields = set(['id', 'one', 'two'])
         self.assertEqual(fields, set(schema.keys()))
         one = {
@@ -58,7 +59,7 @@ class RESTTestCase(TestCase):
         self.assertEqual(200, r.status_code)
         self.assertEqual(u'application/json; charset=utf-8',
                          r['Content-Type'])
-        obj = json.loads(r.content)
+        obj = json.loads(smart_text(r.content))
         x = {
             u'id': 1,
             u'one': 111,
