@@ -46,3 +46,7 @@ class ResourceTestCase(TestCase):
         self.assertEqual(1, obj_dict['id'])
         self.assertEqual(111, obj_dict['one'])
         self.assertEqual('Some string', obj_dict['two'])
+
+    def test_stringify(self):
+        self.assertEqual(u'snooze resource for tests-simple',
+                         self.resource.__unicode__())
