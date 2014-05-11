@@ -49,7 +49,7 @@ class Field(object):
         schema['help_text'] = self.help_text
         schema['primary_key'] = self.primary_key
         schema['unique'] = self.unique
-        if not 'django.db.models.fields.NOT_PROVIDED' in str(self.default):
+        if 'django.db.models.fields.NOT_PROVIDED' not in str(self.default):
             try:
                 schema['default'] = self.to_json(self.default)
             except (TypeError, AttributeError):
