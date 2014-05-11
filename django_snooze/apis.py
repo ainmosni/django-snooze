@@ -28,9 +28,6 @@ class API(object):
             return True
 
         for model in get_models():
-            # We don't want abstract classes to become resources.
-            if model._meta.abstract:
-                continue
             app = model._meta.app_label
             resources = self._resources.get(app, [])
             resources.append(ModelResource(model, self))
