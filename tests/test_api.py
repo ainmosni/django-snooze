@@ -20,3 +20,5 @@ class APITestCase(TestCase):
         """
         self.assertIn('tests', self.api._resources.keys())
         self.assertIn('auth', self.api._resources.keys())
+        tests_models = [x.model_name for x in self.api._resources['tests']]
+        self.assertNotIn('abstract', tests_models)
