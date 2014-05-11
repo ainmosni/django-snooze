@@ -17,11 +17,16 @@ class API(object):
         self.name = name
         self.app_name = app_name
         self.index_view = self.get_index_view()
+        self.discovered = False
 
     def discover_models(self):
         """
         This discovers all available models adds them to the resource registry.
         """
+        # We only want this to run once.
+        if self.discovered:
+            return True
+
         for model in get_models():
             # We don't want abstract classes to become resources.
             if model._meta.abstract:
@@ -30,6 +35,9 @@ class API(object):
             resources = self._resources.get(app, [])
             resources.append(ModelResource(model, self))
             self._resources[app] = resources
+        self.discovered = True
+        return True
+
 
     def get_index_view(self):
         """Constucts an initialised IndexView.
