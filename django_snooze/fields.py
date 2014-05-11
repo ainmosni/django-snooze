@@ -4,6 +4,7 @@ These are all adaptors for Django fields, not overly documented as that would
 just be duplicating Django's excellent documentation.
 """
 
+from django.db.models.fields import NOT_PROVIDED
 from collections import OrderedDict
 
 
@@ -49,7 +50,7 @@ class Field(object):
         schema['help_text'] = self.help_text
         schema['primary_key'] = self.primary_key
         schema['unique'] = self.unique
-        if 'django.db.models.fields.NOT_PROVIDED' not in str(self.default):
+        if self.default != NOT_PROVIDED:
             try:
                 schema['default'] = self.to_json(self.default)
             except (TypeError, AttributeError):

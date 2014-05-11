@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.forms.models import modelform_factory
+from django.db.models.fields import NOT_PROVIDED
 
 from django_snooze import fields
 from django_snooze.views import (QueryView,
@@ -34,6 +35,7 @@ class ModelResource(object):
 
         self.fields = self.get_fields()
         self.fields_dict = self.get_fields_dict()
+        self.field_defaults = self.get_field_defaults()
 
         self.query_view = self.get_query_view()
         self.query_url_re = self.get_query_url_re()
@@ -91,6 +93,17 @@ class ModelResource(object):
 
         """
         return {x.name: x for x in self.fields}
+
+    def get_field_defaults(self):
+        """Creates a dictionary keyed by field name to its default value, if
+        any is defined.
+
+        :returns: A dictionary keyed by fieldname containing the default value.
+
+        """
+        return {x.name: x.default
+                for x in self.fields
+                if x.default != NOT_PROVIDED}
 
     def get_query_view(self):
         """Constructs the QueryView object for this resource.

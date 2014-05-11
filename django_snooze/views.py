@@ -201,6 +201,10 @@ class NewObjectView(ResourceView):
             'CONTENT_TYPE', ''
         ).startswith('application/json'):
             data = json.loads(request.body)
+            # Load missing defaults if needed.
+            for key, value in self.resource.field_defaults.items():
+                if key not in data.keys():
+                    data[key] = value
             form = self.resource.form(data=data)
             if form.is_valid():
                 obj = form.save()
