@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
+from django.utils.encoding import smart_text
 
 
 class RESTView(View):
@@ -200,7 +201,7 @@ class NewObjectView(ResourceView):
         if self.request.META.get(
             'CONTENT_TYPE', ''
         ).startswith('application/json'):
-            data = json.loads(request.body)
+            data = json.loads(smart_text(request.body))
             # Load missing defaults if needed.
             for key, value in self.resource.field_defaults.items():
                 if key not in data.keys():
