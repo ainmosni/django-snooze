@@ -38,9 +38,8 @@ class API(object):
         self.discovered = True
         return True
 
-
     def get_index_view(self):
-        """Constucts an initialised IndexView.
+        """Constructs an initialised IndexView.
 
         :returns: An initialised IndexView
 
