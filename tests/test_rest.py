@@ -7,6 +7,8 @@ from django.test.client import Client
 from django.core import management
 from django.utils.encoding import smart_text
 
+from tests.models import Simple
+
 
 class RESTTestCase(TestCase):
 
@@ -66,3 +68,49 @@ class RESTTestCase(TestCase):
             u'two': 'Some string',
         }
         self.assertEqual(x, obj)
+
+    def test_create_full(self):
+        new_obj_dict = {
+            u'one': 42,
+            u'two': 'Eggs and spam'
+        }
+        r = self.client.post('/api/tests/simple/new/',
+                             data=json.dumps(new_obj_dict),
+                             content_type='application/json')
+        self.assertEqual(201, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        new_obj = Simple.objects.get(pk=r_data['pk'])
+        self.assertEqual(new_obj.one, new_obj_dict['one'])
+        self.assertEqual(new_obj.two, new_obj_dict['two'])
+        self.assertEqual(new_obj.pk, r_data['pk'])
+
+    def test_create_partial(self):
+        new_obj_dict = {
+            u'one': 42,
+        }
+        r = self.client.post('/api/tests/simple/new/',
+                             data=json.dumps(new_obj_dict),
+                             content_type='application/json')
+        self.assertEqual(201, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        new_obj = Simple.objects.get(pk=r_data['pk'])
+        self.assertEqual(new_obj.one, new_obj_dict['one'])
+        self.assertEqual(new_obj.two, u'spam')
+        self.assertEqual(new_obj.pk, r_data['pk'])
+
+    def test_create_incomplete(self):
+        new_obj_dict = {
+            u'two': 'Need more data',
+        }
+        r = self.client.post('/api/tests/simple/new/',
+                             data=json.dumps(new_obj_dict),
+                             content_type='application/json')
+        self.assertEqual(400, r.status_code)
+
+    def test_create_wrong_input(self):
+        new_obj_dict = {
+            u'two': 'Need more data',
+        }
+        r = self.client.post('/api/tests/simple/new/',
+                             data=new_obj_dict)
+        self.assertEqual(400, r.status_code)
