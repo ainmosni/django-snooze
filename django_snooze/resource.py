@@ -94,6 +94,7 @@ class ModelResource(object):
 
     def get_query_view(self):
         """Constructs the QueryView object for this resource.
+
         :returns: The initialised QueryView object for this resource.
 
         """
@@ -113,6 +114,7 @@ class ModelResource(object):
 
     def get_schema_view(self):
         """Constructs the SchemaView object for this resource.
+
         :returns: The initialised SchemaView object for this resource.
 
         """
