@@ -20,22 +20,36 @@ class RESTView(View):
     It keeps the api and resource variable to get access to their variables.
     """
 
-    def render_json_response(self, content, status_code=200, **kwargs):
-        """Serialises content to the content to a response object.
+    def render_serialised_response(self, content, status_code=200, **kwargs):
+        """Figure out what serialiser we need and delegate to the right one.
+        Only JSON is supported for now.
 
         :param content: The content to serialise.
         :param status_code: The status code of the response.
-        :param **kwargs: Additional headers to be set.
-        :returns: HttpResponse with json content.
-
+        :param **kwargs: Additional content to be set.
+        :returns: HttpResponse with the right content.
         """
         response = HttpResponse()
-        response.write(json.dumps(content))
-        response['Content-Type'] = 'application/json; charset=utf-8'
         response.status_code = status_code
         for k, v in kwargs.items():
             response[k] = v
+        # TODO: Do some actal delegating here. This is setup for now so that
+        # will be easier later.
+        (serialised_content, content_type) = self._serialise_to_json(content)
+        response.write(serialised_content)
+        response['Content-Type'] = content_type
         return response
+
+    def _serialise_to_json(self, content):
+        """Serialises content to json.
+
+        :param content: The content to serialise.
+        :returns: A tuple of the serialised content and the content-type.
+
+        """
+        serialised_content = json.dumps(content)
+        content_type = 'application/json; charset=utf-8'
+        return (serialised_content, content_type)
 
     def get(self, request, *args, **kwargs):
         """Handles get requests.
@@ -48,7 +62,8 @@ class RESTView(View):
         """
         # XXX: Use exceptions for cleaner error-code handling?
         content, status_code = self.get_content_data(**kwargs)
-        return self.render_json_response(content, status_code=status_code)
+        return self.render_serialised_response(content,
+                                               status_code=status_code)
 
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
@@ -220,4 +235,5 @@ class NewObjectView(ResourceView):
                 response = {'Status': 'failed',
                             'errors': form.errors}
 
-        return self.render_json_response(response, status_code=status_code)
+        return self.render_serialised_response(response,
+                                               status_code=status_code)
