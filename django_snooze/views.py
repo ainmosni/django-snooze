@@ -133,6 +133,41 @@ class QueryView(ResourceView):
 
     http_method_names = ['get', 'head']
 
+    def get(self, request, *args, **kwargs):
+        """Overriding the get method to add a parse_get_data.
+
+        :param request: The django request object.
+        :param *args: Optional argumenta.
+        :param **kwargs: Optional keyword arguments.
+        :returns: The response.
+
+        """
+        self.parse_get_data(request.GET)
+        return super(QueryView, self).get(request, *args, **kwargs)
+
+    def parse_get_data(self, get_dict):
+        """Parses the get parameters and sorts them for further use.
+
+        :param get_dict: the GET dictionary
+        :returns: None
+
+        """
+        # TODO: Make these configurable
+        SYSTEM_PREFIX = '__'
+        NEGATE_PREFIX = '!'
+
+        self.system_params = {}
+        self.negation_params = {}
+        self.query_params = {}
+
+        for key, value in get_dict.items():
+            if key.startswith(SYSTEM_PREFIX):
+                self.system_params[key[len(SYSTEM_PREFIX):]] = value
+            elif key.startswith(NEGATE_PREFIX):
+                self.negation_params[key[len(NEGATE_PREFIX):]] = value
+            else:
+                self.query_params[key] = value
+
     def get_content_data(self, **kwargs):
         """Handles getting the content for the current query.
 
@@ -143,6 +178,7 @@ class QueryView(ResourceView):
         content = {}
         objects = []
 
+        raise
         # TODO: Make this faster?
         for obj in self.resource.queryset:
             obj_dict = self.resource.obj_to_json(obj)
