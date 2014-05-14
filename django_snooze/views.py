@@ -158,7 +158,7 @@ class QueryView(ResourceView):
 
         self.system_params = {}
         self.negation_params = {}
-        self.query_params = {}
+        self.filter_params = {}
 
         for key, value in get_dict.items():
             if key.startswith(SYSTEM_PREFIX):
@@ -166,7 +166,31 @@ class QueryView(ResourceView):
             elif key.startswith(NEGATE_PREFIX):
                 self.negation_params[key[len(NEGATE_PREFIX):]] = value
             else:
-                self.query_params[key] = value
+                self.filter_params[key] = value
+
+    def construct_queryset(self):
+        """Constructs the queryset, processes all the parameters and returns a
+        queryset that conforms to the query parameters, the negation parameters
+        and the system parameters.
+
+        :returns: A fully constructed queryset.
+
+        """
+        queryset = self.resource.queryset
+        queryset = self.filter_queryset(queryset)
+        return queryset
+
+    def filter_queryset(self, queryset):
+        """Applies all the filter parameters to the queryset.
+
+        :param queryset: The queryset to apply the filters to.
+        :returns: A queryset with filters applied to it.
+
+        """
+        # TODO: Handle relations and non-existent fields.
+        for query_filter, query_param in self.filter_params.items():
+            queryset = queryset.filter(**{query_filter: query_param})
+        return queryset
 
     def get_content_data(self, **kwargs):
         """Handles getting the content for the current query.
@@ -178,9 +202,8 @@ class QueryView(ResourceView):
         content = {}
         objects = []
 
-        raise
         # TODO: Make this faster?
-        for obj in self.resource.queryset:
+        for obj in self.construct_queryset():
             obj_dict = self.resource.obj_to_json(obj)
             objects.append(obj_dict)
 
