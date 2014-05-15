@@ -154,17 +154,17 @@ class QueryView(ResourceView):
         """
         # TODO: Make these configurable
         SYSTEM_PREFIX = '__'
-        NEGATE_PREFIX = '!'
+        EXCLUDE_PREFIX = '!'
 
         self.system_params = {}
-        self.negation_params = {}
         self.filter_params = {}
+        self.exclude_params = {}
 
         for key, value in get_dict.items():
             if key.startswith(SYSTEM_PREFIX):
                 self.system_params[key[len(SYSTEM_PREFIX):]] = value
-            elif key.startswith(NEGATE_PREFIX):
-                self.negation_params[key[len(NEGATE_PREFIX):]] = value
+            elif key.startswith(EXCLUDE_PREFIX):
+                self.exclude_params[key[len(EXCLUDE_PREFIX):]] = value
             else:
                 self.filter_params[key] = value
 
@@ -178,6 +178,7 @@ class QueryView(ResourceView):
         """
         queryset = self.resource.queryset
         queryset = self.filter_queryset(queryset)
+        queryset = self.exclude_queryset(queryset)
         return queryset
 
     def filter_queryset(self, queryset):
@@ -190,6 +191,18 @@ class QueryView(ResourceView):
         # TODO: Handle relations and non-existent fields.
         for query_filter, query_param in self.filter_params.items():
             queryset = queryset.filter(**{query_filter: query_param})
+        return queryset
+
+    def exclude_queryset(self, queryset):
+        """Applies all the exclusion parameters to the queryset.
+
+        :param queryset: The queryset to apply the exclusions to.
+        :returns: A queryset with exclusions applied to it.
+
+        """
+        # TODO: Handle relations and non-existent fields.
+        for query_filter, query_param in self.exclude_params.items():
+            queryset = queryset.exclude(**{query_filter: query_param})
         return queryset
 
     def get_content_data(self, **kwargs):
