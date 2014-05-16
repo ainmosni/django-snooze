@@ -12,6 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.utils.encoding import smart_text
 
+from django_snooze.exceptions import RESTError
+
 
 class RESTView(View):
     """
@@ -60,7 +62,6 @@ class RESTView(View):
         :returns: The response.
 
         """
-        # XXX: Use exceptions for cleaner error-code handling?
         content, status_code = self.get_content_data(**kwargs)
         return self.render_serialised_response(content,
                                                status_code=status_code)
@@ -68,13 +69,20 @@ class RESTView(View):
     @method_decorator(csrf_exempt)
     def dispatch(self, *args, **kwargs):
         """Overriden dispatch to disable CSRF on all snooze views.
+        This also wraps dispatch in an exception handler that catches
+        RESTError and returns a proper HTTP error and serialised content to
+        the user.
 
         :param *args: Arguments list
         :param **kwargs: Keyword argument dict.
         :returns: The response.
 
         """
-        return super(RESTView, self).dispatch(*args, **kwargs)
+        try:
+            return super(RESTView, self).dispatch(*args, **kwargs)
+        except RESTError as e:
+            return self.render_serialised_response(e.content,
+                                                   status_code=e.status_code)
 
 
 class IndexView(RESTView):
@@ -281,9 +289,6 @@ class NewObjectView(ResourceView):
         :returns: An HttpResponse with the status of the operation.
 
         """
-        # Assume a bad request by default.
-        response = {'Status': 'Wrong Content-Type.'}
-        status_code = 400
 
         if self.request.META.get(
             'CONTENT_TYPE', ''
@@ -306,6 +311,10 @@ class NewObjectView(ResourceView):
             else:
                 response = {'Status': 'failed',
                             'errors': form.errors}
+                raise RESTError(400, response)
+        else:
+            response = {'Status': 'Wrong Content-Type.'}
+            raise RESTError(400, response)
 
         return self.render_serialised_response(response,
                                                status_code=status_code)
