@@ -4,8 +4,11 @@ These are all adaptors for Django fields, not overly documented as that would
 just be duplicating Django's excellent documentation.
 """
 
-from django.db.models.fields import NOT_PROVIDED
 from collections import OrderedDict
+
+from django.db.models.fields import NOT_PROVIDED
+
+from django_snooze.exceptions import RESTError
 
 
 class Field(object):
@@ -67,6 +70,53 @@ class Field(object):
 
         """
         return str(field_value) if field_value else None
+
+    def process_param(self, param, value):
+        """Validates a query and value parameter. Will check if it's a valid
+        lookup type and will raise a RESTError with a proper message if it's
+        not. It will also see if the value is the proper length.
+
+        :param param: A query parameter.
+        :param value: A querydict value list.
+        :returns: Tuple of the processed parameter and a processed value.
+
+        """
+        param_list = param.split('__')
+
+        # If we only see a single param, add exact.
+        if len(param_list) == 1:
+            param_list.append('exact')
+
+        # Let's see if we didn't get a relation.
+        if len(param_list) > 2:
+            raise RESTError(400, {'Error': 'Field {} has no relations'.format(
+                self.name)})
+
+        field, lookup_type = param_list
+
+        if lookup_type not in {
+            'iexact', 'contains', 'icontains', 'startswith', 'istartswith',
+            'endswith', 'iendswith', 'month', 'day', 'week_day', 'hour',
+            'minute', 'second', 'isnull', 'search', 'regex', 'iregex', 'exact',
+            'gt', 'gte', 'lt', 'lte', 'range', 'range', 'in', 'year'
+        }:
+            raise RESTError(400, {
+                'Error': '{} is not a valid lookup type for field {}'.format(
+                    param_list[1], param_list[0]
+                )})
+
+        # Validate the value for non list type parameters.
+        if lookup_type not in {'range', 'in'}:
+            if len(value) > 1:
+                raise RESTError(400, {
+                    'Error': '{} only takes a single value.'.format(
+                        lookup_type)
+                })
+            value = value[0]
+        else:
+            value = list(value)
+
+        return (param, value)
 
 
 # Integer fields

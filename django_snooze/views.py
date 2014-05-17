@@ -168,7 +168,7 @@ class QueryView(ResourceView):
         self.filter_params = {}
         self.exclude_params = {}
 
-        for key, value in get_dict.items():
+        for key, value in get_dict.iterlists():
             if key.startswith(SYSTEM_PREFIX):
                 self.system_params[key[len(SYSTEM_PREFIX):]] = value
             elif key.startswith(EXCLUDE_PREFIX):
@@ -197,8 +197,10 @@ class QueryView(ResourceView):
 
         """
         # TODO: Handle relations and non-existent fields.
-        for query_filter, query_param in self.filter_params.items():
-            queryset = queryset.filter(**{query_filter: query_param})
+        for query_filter, query_value in self.filter_params.items():
+            query_filter, query_value = self._process_param(query_filter,
+                                                            query_value)
+            queryset = queryset.filter(**{query_filter: query_value})
         return queryset
 
     def exclude_queryset(self, queryset):
@@ -230,6 +232,22 @@ class QueryView(ResourceView):
 
         content['objects'] = objects
         return (content, 200)
+
+    def _process_param(self, param, value):
+        """Checks if a field exists and then hands it to the field's parameter
+        process method.
+
+        :param param: The query parameter.
+        :param value: The query value.
+        :returns: A typle of the processed parameter and a processed value.
+
+        """
+        field_name = param.split('__')[0]
+        if field_name not in self.resource.fields_dict:
+            raise RESTError(400, {
+                'Error': 'Field {} not queryable'.format(field_name)})
+        return self.resource.fields_dict[field_name].process_param(param,
+                                                                   value)
 
 
 class SchemaView(ResourceView):
