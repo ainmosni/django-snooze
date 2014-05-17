@@ -211,8 +211,10 @@ class QueryView(ResourceView):
 
         """
         # TODO: Handle relations and non-existent fields.
-        for query_filter, query_param in self.exclude_params.items():
-            queryset = queryset.exclude(**{query_filter: query_param})
+        for query_filter, query_value in self.exclude_params.items():
+            query_filter, query_value = self._process_param(query_filter,
+                                                            query_value)
+            queryset = queryset.exclude(**{query_filter: query_value})
         return queryset
 
     def get_content_data(self, **kwargs):
