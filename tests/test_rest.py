@@ -114,3 +114,54 @@ class RESTTestCase(TestCase):
         r = self.client.post('/api/tests/simple/new/',
                              data=new_obj_dict)
         self.assertEqual(400, r.status_code)
+
+    def test_query_all(self):
+        r = self.client.get('/api/tests/simple/')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(3, len(r_data['objects']))
+        self.assertEqual(111, r_data['objects'][0]['one'])
+        self.assertEqual('Some string', r_data['objects'][0]['two'])
+
+    def test_query_filtered(self):
+        r = self.client.get('/api/tests/simple/?two=Some+other+string')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(1, len(r_data['objects']))
+        self.assertEqual(222, r_data['objects'][0]['one'])
+        self.assertEqual('Some other string', r_data['objects'][0]['two'])
+
+    def test_query_excluded(self):
+        r = self.client.get('/api/tests/simple/?!two=Some+other+string')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(2, len(r_data['objects']))
+        for obj in r_data['objects']:
+            self.assertNotEqual(222, obj['one'])
+            self.assertNotEqual('Some other string', obj['two'])
+
+    def test_query_combined(self):
+        r = self.client.get(
+            '/api/tests/simple/?two__contains=string&!two__contains=Some')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(1, len(r_data['objects']))
+        self.assertEqual(333, r_data['objects'][0]['one'])
+        self.assertEqual('Yet another string', r_data['objects'][0]['two'])
+
+    def test_query_in(self):
+        r = self.client.get('/api/tests/simple/?one__in=111&one__in=333')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(2, len(r_data['objects']))
+        for obj in r_data['objects']:
+            self.assertNotEqual(222, obj['one'])
+            self.assertNotEqual('Some other string', obj['two'])
+
+    def test_query_invalid_field(self):
+        r = self.client.get('/api/tests/simple/?three=333')
+        self.assertEqual(400, r.status_code)
+
+    def test_query_invalid_lookup(self):
+        r = self.client.get('/api/tests/simple/?two__may=Some+other+string')
+        self.assertEqual(400, r.status_code)
