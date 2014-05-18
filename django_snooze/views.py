@@ -168,7 +168,7 @@ class QueryView(ResourceView):
         self.filter_params = {}
         self.exclude_params = {}
 
-        for key, value in get_dict.iterlists():
+        for key, value in get_dict.lists():
             if key.startswith(SYSTEM_PREFIX):
                 self.system_params[key[len(SYSTEM_PREFIX):]] = value
             elif key.startswith(EXCLUDE_PREFIX):
