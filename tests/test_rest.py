@@ -69,6 +69,10 @@ class RESTTestCase(TestCase):
         }
         self.assertEqual(x, obj)
 
+    def test_fetch(self):
+        r = self.client.get('/api/tests/simple/10/')
+        self.assertEqual(404, r.status_code)
+
     def test_create_full(self):
         new_obj_dict = {
             u'one': 42,
