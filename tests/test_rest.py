@@ -69,7 +69,7 @@ class RESTTestCase(TestCase):
         }
         self.assertEqual(x, obj)
 
-    def test_fetch(self):
+    def test_fetch_nonexistent(self):
         r = self.client.get('/api/tests/simple/10/')
         self.assertEqual(404, r.status_code)
 
