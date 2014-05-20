@@ -187,6 +187,7 @@ class QueryView(ResourceView):
         queryset = self.resource.queryset
         queryset = self.filter_queryset(queryset)
         queryset = self.exclude_queryset(queryset)
+        queryset = self.misc_alter_queryset(queryset)
         return queryset
 
     def filter_queryset(self, queryset):
@@ -216,6 +217,37 @@ class QueryView(ResourceView):
                                                             query_value)
             queryset = queryset.exclude(**{query_filter: query_value})
         return queryset
+
+    def misc_alter_queryset(self, queryset):
+        """Run miscellaneous queryset alterations, this will contain a lot of
+        the "system" parameters.
+
+        :param queryset: The queryset to apply the alterations to.
+        :returns: A queryset with the alterations applied.
+
+        """
+        if 'order_by' in self.system_params:
+            queryset = self.order_by(queryset, self.system_params['order_by'])
+
+        return queryset
+
+    def order_by(self, queryset, fields):
+        """Applies order to the queryset.
+
+        :param queryset: The queryset to apply order_by to.
+        :param fields: The fields to order by, should be a single comma
+                       seperated value.
+        :returns: An ordered queryset.
+
+        """
+        if len(fields) > 1:
+            raise RESTError(400,
+                            'order_by needs a single comma seperated string')
+
+        fields = fields[0].split(',')
+
+        # TODO: Add field validation
+        return queryset.order_by(*fields)
 
     def get_content_data(self, **kwargs):
         """Handles getting the content for the current query.
