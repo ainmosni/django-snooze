@@ -209,3 +209,7 @@ class RESTTestCase(TestCase):
     def test_sort_multiple_values(self):
         r = self.client.get('/api/tests/simple/?__order_by=one&__order_by=two')
         self.assertEqual(400, r.status_code)
+
+    def test_sort_invalid_field(self):
+        r = self.client.get('/api/tests/simple/?__order_by=on')
+        self.assertEqual(400, r.status_code)

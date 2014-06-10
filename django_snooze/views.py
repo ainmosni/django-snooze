@@ -246,7 +246,14 @@ class QueryView(ResourceView):
 
         fields = fields[0].split(',')
 
-        # TODO: Add field validation
+        errors = {field: "Field {} is not orderable".format(field)
+                  for field in fields
+                  if not self._check_valid_field(field.lstrip('-'))}
+
+        if errors:
+            raise RESTError(400,
+                            {'Errors': errors})
+
         return queryset.order_by(*fields)
 
     def get_content_data(self, **kwargs):
@@ -277,11 +284,22 @@ class QueryView(ResourceView):
 
         """
         field_name = param.split('__')[0]
-        if field_name not in self.resource.fields_dict:
+        if not self._check_valid_field(field_name):
             raise RESTError(400, {
-                'Error': 'Field {} not queryable'.format(field_name)})
+                'Error': 'Field {} is not queryable'.format(field_name)})
         return self.resource.fields_dict[field_name].process_param(param,
                                                                    value)
+
+    def _check_valid_field(self, field):
+        """Checks if a field exists.
+
+        :param field: The field.
+        :returns: Boolean
+        """
+        exists = False
+        if field in self.resource.fields_dict:
+            exists = True
+        return exists
 
 
 class SchemaView(ResourceView):
