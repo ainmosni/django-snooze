@@ -123,7 +123,7 @@ class RESTTestCase(TestCase):
         r = self.client.get('/api/tests/simple/')
         self.assertEqual(200, r.status_code)
         r_data = json.loads(smart_text(r.content))
-        self.assertEqual(3, len(r_data['objects']))
+        self.assertEqual(6, len(r_data['objects']))
         self.assertEqual(111, r_data['objects'][0]['one'])
         self.assertEqual('Some string', r_data['objects'][0]['two'])
 
@@ -139,7 +139,7 @@ class RESTTestCase(TestCase):
         r = self.client.get('/api/tests/simple/?!two=Some+other+string')
         self.assertEqual(200, r.status_code)
         r_data = json.loads(smart_text(r.content))
-        self.assertEqual(2, len(r_data['objects']))
+        self.assertEqual(5, len(r_data['objects']))
         for obj in r_data['objects']:
             self.assertNotEqual(222, obj['one'])
             self.assertNotEqual('Some other string', obj['two'])
@@ -157,7 +157,7 @@ class RESTTestCase(TestCase):
         r = self.client.get('/api/tests/simple/?one__in=111&one__in=333')
         self.assertEqual(200, r.status_code)
         r_data = json.loads(smart_text(r.content))
-        self.assertEqual(2, len(r_data['objects']))
+        self.assertEqual(3, len(r_data['objects']))
         for obj in r_data['objects']:
             self.assertNotEqual(222, obj['one'])
             self.assertNotEqual('Some other string', obj['two'])
@@ -169,3 +169,39 @@ class RESTTestCase(TestCase):
     def test_query_invalid_lookup(self):
         r = self.client.get('/api/tests/simple/?two__may=Some+other+string')
         self.assertEqual(400, r.status_code)
+
+    def test_sort_single_field(self):
+        r = self.client.get('/api/tests/simple/?__order_by=one')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(1, r_data['objects'][0]['one'])
+        self.assertEqual(1, r_data['objects'][1]['one'])
+        self.assertEqual(111, r_data['objects'][2]['one'])
+
+    def test_sort_single_field_desc(self):
+        r = self.client.get('/api/tests/simple/?__order_by=-one')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(333, r_data['objects'][0]['one'])
+        self.assertEqual(333, r_data['objects'][1]['one'])
+        self.assertEqual(222, r_data['objects'][2]['one'])
+
+    def test_sort_multiple_fields(self):
+        r = self.client.get('/api/tests/simple/?__order_by=one,two')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(1, r_data['objects'][0]['one'])
+        self.assertEqual("A", r_data['objects'][0]['two'])
+        self.assertEqual(1, r_data['objects'][1]['one'])
+        self.assertEqual("B", r_data['objects'][1]['two'])
+        self.assertEqual(111, r_data['objects'][2]['one'])
+
+    def test_sort_multiple_fields_desc(self):
+        r = self.client.get('/api/tests/simple/?__order_by=-one,-two')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        self.assertEqual(333, r_data['objects'][0]['one'])
+        self.assertEqual("Zzzz", r_data['objects'][0]['two'])
+        self.assertEqual(333, r_data['objects'][1]['one'])
+        self.assertEqual("Yet another string", r_data['objects'][1]['two'])
+        self.assertEqual(222, r_data['objects'][2]['one'])

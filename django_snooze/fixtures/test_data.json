@@ -22,5 +22,29 @@
             "one": 333,
             "two": "Yet another string"
         }
+    },
+    {
+        "model": "tests.simple",
+        "pk": 4,
+        "fields": {
+            "one": 1,
+            "two": "B"
+        }
+    },
+    {
+        "model": "tests.simple",
+        "pk": 5,
+        "fields": {
+            "one": 1,
+            "two": "A"
+        }
+    },
+    {
+        "model": "tests.simple",
+        "pk": 6,
+        "fields": {
+            "one": 333,
+            "two": "Zzzz"
+        }
     }
 ]
