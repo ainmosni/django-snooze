@@ -205,3 +205,7 @@ class RESTTestCase(TestCase):
         self.assertEqual(333, r_data['objects'][1]['one'])
         self.assertEqual("Yet another string", r_data['objects'][1]['two'])
         self.assertEqual(222, r_data['objects'][2]['one'])
+
+    def test_sort_multiple_values(self):
+        r = self.client.get('/api/tests/simple/?__order_by=one&__order_by=two')
+        self.assertEqual(400, r.status_code)
