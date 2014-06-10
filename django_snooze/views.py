@@ -236,13 +236,13 @@ class QueryView(ResourceView):
 
         :param queryset: The queryset to apply order_by to.
         :param fields: The fields to order by, should be a single comma
-                       seperated value.
+                       separated value.
         :returns: An ordered queryset.
 
         """
         if len(fields) > 1:
             raise RESTError(400,
-                            'order_by needs a single comma seperated string')
+                            'Order_by needs a single comma separated string')
 
         fields = fields[0].split(',')
 
