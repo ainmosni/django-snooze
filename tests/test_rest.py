@@ -213,3 +213,25 @@ class RESTTestCase(TestCase):
     def test_sort_invalid_field(self):
         r = self.client.get('/api/tests/simple/?__order_by=on')
         self.assertEqual(400, r.status_code)
+
+    def test_values_list_single(self):
+        r = self.client.get('/api/tests/simple/?__values_list=one')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        for obj in r_data['objects']:
+            self.assertIn('one', obj.keys())
+            self.assertNotIn('two', obj.keys())
+            self.assertNotIn('id', obj.keys())
+
+    def test_values_list(self):
+        r = self.client.get('/api/tests/simple/?__values_list=one,two')
+        self.assertEqual(200, r.status_code)
+        r_data = json.loads(smart_text(r.content))
+        for obj in r_data['objects']:
+            self.assertIn('one', obj.keys())
+            self.assertIn('two', obj.keys())
+            self.assertNotIn('id', obj.keys())
+
+    def test_values_list_invalid_field(self):
+        r = self.client.get('/api/tests/simple/?__values_list=on')
+        self.assertEqual(400, r.status_code)

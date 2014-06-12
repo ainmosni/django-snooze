@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from collections import OrderedDict
 from django.forms.models import modelform_factory
 from django.db.models.fields import NOT_PROVIDED
 
@@ -206,6 +207,20 @@ class ModelResource(object):
             obj_dict[obj_field.name] = obj_field.to_json(
                 getattr(obj, obj_field.name)
             )
+        return obj_dict
+
+    def tuple_to_json(self, values, keys):
+        """Converts a tuple to json, using the supplied keys as keys.
+
+        :param values: The values tuple.
+        :param keys: The keys of this set
+        :returns: A serialisable object.
+
+        """
+        obj_dict = OrderedDict()
+        for idx, key in enumerate(keys):
+            obj_dict[key] = self.fields_dict[key].to_json(values[idx])
+
         return obj_dict
 
     def __unicode__(self):

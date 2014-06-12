@@ -226,8 +226,13 @@ class QueryView(ResourceView):
         :returns: A queryset with the alterations applied.
 
         """
+        self.render_values_list = False
         if 'order_by' in self.system_params:
             queryset = self.order_by(queryset, self.system_params['order_by'])
+
+        if 'values_list' in self.system_params:
+            queryset = self.values_list(queryset,
+                                        self.system_params['values_list'])
 
         return queryset
 
@@ -242,11 +247,11 @@ class QueryView(ResourceView):
         """
         if len(fields) > 1:
             raise RESTError(400,
-                            'Order_by needs a single comma separated string')
+                            'Order_by needs a single comma separated string.')
 
         fields = fields[0].split(',')
 
-        errors = {field: "Field {} is not orderable".format(field)
+        errors = {field: "Field {} is not orderable.".format(field)
                   for field in fields
                   if not self._check_valid_field(field.lstrip('-'))}
 
@@ -255,6 +260,34 @@ class QueryView(ResourceView):
                             {'Errors': errors})
 
         return queryset.order_by(*fields)
+
+    def values_list(self, queryset, fields):
+        """Constructs a values_list object.
+
+        :param queryset: The queryset to use to construct the values list from.
+        :param fields: The fields to include in the values list.
+        :returns: A list of tuples containing the values.
+
+        """
+        if len(fields) > 1:
+            raise RESTError(
+                400,
+                'values_list needs a single comma seperated string.'
+            )
+
+        # TODO: Handle relations
+        fields = fields[0].split(',')
+
+        errors = {field: "Field {} is not listable.".format(field)
+                  for field in fields
+                  if not self._check_valid_field(field)}
+
+        if errors:
+            raise RESTError(400,
+                            {'Errors': errors})
+
+        self.render_values_list = fields
+        return queryset.values_list(*fields)
 
     def get_content_data(self, **kwargs):
         """Handles getting the content for the current query.
@@ -268,7 +301,11 @@ class QueryView(ResourceView):
 
         # TODO: Make this faster?
         for obj in self.construct_queryset():
-            obj_dict = self.resource.obj_to_json(obj)
+            if self.render_values_list:
+                obj_dict = self.resource.tuple_to_json(obj,
+                                                       self.render_values_list)
+            else:
+                obj_dict = self.resource.obj_to_json(obj)
             objects.append(obj_dict)
 
         content['objects'] = objects
